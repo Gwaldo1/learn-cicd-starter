@@ -12,7 +12,7 @@ func TestGetAPIKey(t *testing.T) {
         want    string
         wantErr bool
     }{
-        {name: "valid", input: "ApiKey abc123", want: "abc123", wantErr: false},
+        {name: "valid", input: "ApiKey abc123", want: "abcd123", wantErr: false},
         {name: "empty", input: "", want: "", wantErr: true},
         {name: "invalid", input: "Basic xyz789", want: "", wantErr: true},
     }
