@@ -13,11 +13,24 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      # Set up Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23.0'
 
+      # Install Goose (for database migrations)
+      - name: Install Goose
+        run: |
+          wget https://github.com/pressly/goose/releases/download/v3.5.1/goose-linux-amd64-3.5.1.tar.gz
+          tar -xvzf goose-linux-amd64-3.5.1.tar.gz
+          sudo mv goose /usr/local/bin
+
+      # Check for sensitive credentials before building
+      - name: Check for sensitive credentials
+        run: git diff HEAD
+
+      # Build app
       - name: Build app
         run: ./scripts/buildprod.sh
 
@@ -38,5 +51,11 @@ jobs:
         run: |
           gcloud builds submit --tag us-central1-docker.pkg.dev/notely-441109/notely-ar-repo/notely:latest .
 
+      # Run database migrations
+      - name: Run migrations
+        run: |
+          goose -dir ./migrations mysql "${{ secrets.DATABASE_URL }}" up
+
+      # Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: gcloud run deploy notely --image us-central1-docker.pkg.dev/notely-441109/notely-ar-repo/notely:latest --region us-central1 --allow-unauthenticated --project notely-441109 --max-instances=4
